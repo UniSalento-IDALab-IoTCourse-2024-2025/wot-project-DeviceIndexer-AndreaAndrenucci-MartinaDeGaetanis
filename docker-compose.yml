@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: indexer_mongodb
+    restart: always
+    ports:
+      - "27015:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - microservices_network
+
+  flask_app:
+    build: .
+    container_name: device_indexer
+    restart: always
+    ports:
+      - "8082:8080"
+    depends_on:
+      - mongo
+    networks:
+      - microservices_network
+      - krakend-net
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+    volumes:
+      - .:/app
+    command: python app.py
+
+  mqtt_server:
+    build: .
+    container_name: mqtt_subscriber
+    restart: always
+    depends_on:
+      - mongo
+    networks:
+      - microservices_network
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+    volumes:
+      - .:/app
+    command: python mqtt_server.py
+
+  celery_beat:
+    build: .
+    command: celery -A celery beat --loglevel=info
+    depends_on:
+      - mongo
+    networks:
+      - microservices_network
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+
+
+networks:
+  microservices_network:
+    external: true
+  krakend-net:
+    external: true
+
+volumes:
+  mongo_data:

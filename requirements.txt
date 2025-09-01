@@ -1,0 +1,9 @@
+flask 
+pymongo
+Flask-APScheduler
+celery
+requests
+python-dotenv
+PyJWT
+
+paho-mqtt

@@ -1,0 +1,42 @@
+@startuml Knowledge_Distillation_Framework_Sequence
+!theme blueprint
+skinparam padding 10
+
+actor Operator
+
+participant Smartbox
+participant "API Gateway" as Gateway
+participant "Device Indexer" as DeviceIndexer
+participant "Device Manager" as DeviceManager
+
+
+Operator -> Smartbox: config connection
+
+activate Smartbox
+    Smartbox->Smartbox: Blink yellow LED
+
+==Device Registration==
+|||
+    loop until connection ok
+        Smartbox -> Gateway: register the device
+        Gateway -> DeviceIndexer: request forwarding
+        activate DeviceIndexer
+        DeviceIndexer->Smartbox: response OK 200
+        deactivate Smartbox
+        
+        else connection timed out
+            Smartbox->Smartbox:Blink red LED
+            note right
+                O in generale dare un 
+                sistema di codice errore all'operatore
+            end note
+            |||
+    end
+    |||
+        note right 
+            IPv4 registration
+        end note
+
+        DeviceIndexer -> DeviceManager: device registration
+    |||
+    deactivate DeviceIndexer
